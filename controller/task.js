@@ -90,8 +90,91 @@ const updateQueueOnTask = async (req, res, next) => {
   }
 };
 
+const getTaskById = async (req, res, next) => {
+  try {
+    const taskId = req.query.id || "";
+
+    const taskDetails = await Task.findById(taskId);
+
+    if (!taskDetails) {
+      return res.status(400).json({
+        message: "Bad request",
+      });
+    }
+
+    res.json({ data: taskDetails });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const updateTask = async (req, res, next) => {
+  try {
+    const taskId = req.query.id || "";
+
+    if (!taskId) {
+      return res.status(400).json({
+        message: "Bad Request",
+      });
+    }
+
+    const isTaskExists = await Task.findOne({
+      _id: taskId,
+    });
+
+    if (!isTaskExists) {
+      return res.status(400).json({
+        message: "Bad request",
+      });
+    }
+
+    const { title, priority, assignedTo, queue, tasks, dueDate, user } =
+      req.body;
+
+    await Task.updateOne(
+      { _id: taskId },
+      {
+        $set: {
+          title,
+          priority,
+          assignedTo,
+          queue,
+          tasks,
+          dueDate,
+          user,
+        },
+      }
+    );
+
+    res.json({ message: "Task updated successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const deleteTaskById = async (req, res, next) => {
+  try {
+    const taskId = req.query.id || "";
+
+    const taskDetails = await Task.deleteOne({ _id: taskId });
+
+    if (!taskDetails) {
+      return res.status(400).json({
+        message: "Bad request",
+      });
+    }
+
+    res.json({ message: "Task deleted successfully", isDeleted: true });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   addTask,
   getTask,
   updateQueueOnTask,
+  getTaskById,
+  updateTask,
+  deleteTaskById,
 };
