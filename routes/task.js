@@ -8,5 +8,8 @@ router.put("/updateQueue", taskController.updateQueueOnTask);
 router.get("/getOne", taskController.getTaskById);
 router.put("/update", taskController.updateTask);
 router.delete("/delete", taskController.deleteTaskById);
+router.get("/getAnalyticsDetails", taskController.getAnalyticsDetails);
+router.post("/addUser", taskController.addUser);
+router.get("/getAssignee", taskController.getAllAssignee);
 
 module.exports = router;

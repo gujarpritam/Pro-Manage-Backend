@@ -1,9 +1,19 @@
 const Task = require("../models/task");
+const Assignee = require("../models/assignee");
 
 const addTask = async (req, res) => {
   try {
-    const { title, priority, assignedTo, queue, tasks, dueDate, user } =
-      req.body;
+    const {
+      title,
+      priority,
+      assignedTo,
+      queue,
+      tasks,
+      checkedTasks,
+      checkedNumber,
+      dueDate,
+      user,
+    } = req.body;
 
     console.log(title, priority, assignedTo);
 
@@ -19,6 +29,8 @@ const addTask = async (req, res) => {
       assignedTo,
       queue,
       tasks,
+      checkedTasks,
+      checkedNumber,
       dueDate,
       user,
     });
@@ -79,6 +91,8 @@ const updateQueueOnTask = async (req, res, next) => {
           queue: updatedQueue,
           tasks: taskDetails?.tasks,
           dueDate: taskDetails?.dueDate,
+          checkedTasks: taskDetails?.checkedTasks,
+          checkedNumber: taskDetails?.checkedNumber,
           user: taskDetails?.user,
         },
       }
@@ -128,8 +142,17 @@ const updateTask = async (req, res, next) => {
       });
     }
 
-    const { title, priority, assignedTo, queue, tasks, dueDate, user } =
-      req.body;
+    const {
+      title,
+      priority,
+      assignedTo,
+      queue,
+      tasks,
+      dueDate,
+      checkedTasks,
+      checkedNumber,
+      user,
+    } = req.body;
 
     await Task.updateOne(
       { _id: taskId },
@@ -141,6 +164,8 @@ const updateTask = async (req, res, next) => {
           queue,
           tasks,
           dueDate,
+          checkedTasks,
+          checkedNumber,
           user,
         },
       }
@@ -170,6 +195,88 @@ const deleteTaskById = async (req, res, next) => {
   }
 };
 
+const getAnalyticsDetails = async (req, res, next) => {
+  try {
+    let todoTasks = await Task.find({ queue: "todo" });
+    let backlogTasks = await Task.find({ queue: "backlog" });
+    let progressTasks = await Task.find({ queue: "progress" });
+    let completedTasks = await Task.find({ queue: "done" });
+    let lowPriority = await Task.find({ priority: "low" });
+    let moderatePriority = await Task.find({ priority: "moderate" });
+    let highPriority = await Task.find({ priority: "high" });
+    let allTasks = await Task.find({});
+    let nullDueDateTasks = await Task.find({ dueDate: null });
+
+    let dueDateTasks = allTasks?.length - nullDueDateTasks?.length;
+
+    return res.json({
+      data: {
+        todoTasks: todoTasks?.length,
+        backlogTasks: backlogTasks?.length,
+        progressTasks: progressTasks?.length,
+        completedTasks: completedTasks?.length,
+        lowPriority: lowPriority?.length,
+        moderatePriority: moderatePriority?.length,
+        highPriority: highPriority?.length,
+        dueDateTasks: dueDateTasks,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const addUser = async (req, res, next) => {
+  try {
+    const email = req.query.email;
+
+    console.log(email);
+
+    if (!email) {
+      return res.status(400).json({
+        message: "Bad Request",
+      });
+    }
+
+    const isUserExists = await Assignee.findOne({
+      email: email,
+    });
+
+    if (isUserExists) {
+      return res.status(400).json({
+        message: "User already exists",
+      });
+    }
+
+    const userDetails = new Assignee({
+      email,
+    });
+
+    await userDetails.save();
+
+    res.json({ message: "User created successfully", isUserCreated: true });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getAllAssignee = async (req, res, next) => {
+  try {
+    // const category = req.query.category;
+
+    let assigneeDetails = await Assignee.find({});
+    console.log("assignee", assigneeDetails);
+
+    assigneeDetails = Array.from(assigneeDetails);
+
+    return res.json({
+      data: assigneeDetails,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   addTask,
   getTask,
@@ -177,4 +284,7 @@ module.exports = {
   getTaskById,
   updateTask,
   deleteTaskById,
+  getAnalyticsDetails,
+  addUser,
+  getAllAssignee,
 };

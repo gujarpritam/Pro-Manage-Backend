@@ -20,6 +20,12 @@ const taskSchema = new mongoose.Schema(
     tasks: {
       type: Array,
     },
+    checkedTasks: {
+      type: Array,
+    },
+    checkedNumber: {
+      type: Number,
+    },
     dueDate: {
       type: String,
     },
