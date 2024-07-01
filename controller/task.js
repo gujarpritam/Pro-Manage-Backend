@@ -46,8 +46,71 @@ const addTask = async (req, res) => {
 const getTask = async (req, res, next) => {
   try {
     const category = req.query.category;
+    const timeStamp = req.query.timeStamp;
 
-    let taskDetails = await Task.find({ queue: category });
+    console.log(category, timeStamp);
+    let taskDetails;
+
+    if (timeStamp === "Today") {
+      taskDetails = await Task.find({
+        queue: category,
+        createdAt: {
+          $lt: new Date(),
+          $gt: new Date(
+            new Date().getTime() - new Date().getHours() * 60 * 60 * 1000
+          ),
+        },
+      });
+
+      // console.log();
+
+      taskDetails = Array.from(taskDetails);
+
+      return res.json({
+        data: taskDetails,
+      });
+    }
+
+    if (timeStamp === "This Week") {
+      taskDetails = await Task.find({
+        queue: category,
+        createdAt: {
+          $lt: new Date(),
+          $gt: new Date(new Date().getTime() - 7 * 24 * 60 * 60 * 1000),
+        },
+      });
+
+      taskDetails = Array.from(taskDetails);
+
+      return res.json({
+        data: taskDetails,
+      });
+    }
+
+    if (timeStamp === "This Month") {
+      taskDetails = await Task.find({
+        queue: category,
+        createdAt: {
+          $lt: new Date(),
+          $gt: new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000),
+        },
+      });
+
+      taskDetails = Array.from(taskDetails);
+
+      return res.json({
+        data: taskDetails,
+      });
+    }
+
+    taskDetails = await Task.find({
+      queue: category,
+      createdAt: {
+        $lt: new Date(),
+        $gt: new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000),
+      },
+    });
+
     console.log(taskDetails);
 
     taskDetails = Array.from(taskDetails);
