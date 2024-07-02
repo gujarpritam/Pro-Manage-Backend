@@ -47,13 +47,15 @@ const getTask = async (req, res, next) => {
   try {
     const category = req.query.category;
     const timeStamp = req.query.timeStamp;
+    const createdBy = req.query.user;
 
-    console.log(category, timeStamp);
-    let taskDetails;
+    // console.log(category, timeStamp);
+    let taskDetails, taskDetailsWithAssignee;
 
     if (timeStamp === "Today") {
       taskDetails = await Task.find({
         queue: category,
+        user: createdBy,
         createdAt: {
           $lt: new Date(),
           $gt: new Date(
@@ -62,61 +64,82 @@ const getTask = async (req, res, next) => {
         },
       });
 
-      // console.log();
-
-      taskDetails = Array.from(taskDetails);
-
-      return res.json({
-        data: taskDetails,
+      taskDetailsWithAssignee = await Task.find({
+        queue: category,
+        assignedTo: createdBy,
+        createdAt: {
+          $lt: new Date(),
+          $gt: new Date(
+            new Date().getTime() - new Date().getHours() * 60 * 60 * 1000
+          ),
+        },
       });
     }
 
     if (timeStamp === "This Week") {
       taskDetails = await Task.find({
         queue: category,
+        user: createdBy,
         createdAt: {
           $lt: new Date(),
           $gt: new Date(new Date().getTime() - 7 * 24 * 60 * 60 * 1000),
         },
       });
 
-      taskDetails = Array.from(taskDetails);
-
-      return res.json({
-        data: taskDetails,
+      taskDetailsWithAssignee = await Task.find({
+        queue: category,
+        assignedTo: createdBy,
+        createdAt: {
+          $lt: new Date(),
+          $gt: new Date(new Date().getTime() - 7 * 24 * 60 * 60 * 1000),
+        },
       });
     }
 
     if (timeStamp === "This Month") {
       taskDetails = await Task.find({
         queue: category,
+        user: createdBy,
         createdAt: {
           $lt: new Date(),
           $gt: new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000),
         },
       });
 
-      taskDetails = Array.from(taskDetails);
-
-      return res.json({
-        data: taskDetails,
+      taskDetailsWithAssignee = await Task.find({
+        queue: category,
+        assignedTo: createdBy,
+        createdAt: {
+          $lt: new Date(),
+          $gt: new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000),
+        },
       });
     }
 
-    taskDetails = await Task.find({
-      queue: category,
-      createdAt: {
-        $lt: new Date(),
-        $gt: new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000),
-      },
-    });
-
-    console.log(taskDetails);
-
+    taskDetailsWithAssignee = Array.from(taskDetailsWithAssignee);
     taskDetails = Array.from(taskDetails);
 
+    // for (let index = 0; index < taskDetailsWithAssignee?.length; index++) {
+    let taskDetailsWithAssigneeArr = taskDetailsWithAssignee.filter((item) => {
+      return item?.user !== createdBy;
+    });
+    // if (taskDetailsWithAssignee[index].user == createdBy) {
+    //   console.log(taskDetailsWithAssignee[index]);
+    //   taskDetailsWithAssignee.splice(index, 1);
+    // }
+    // }
+
+    console.log(
+      timeStamp,
+      category,
+      "taskDetailsWithAssigneeArr",
+      taskDetailsWithAssigneeArr,
+      "taskDetails",
+      taskDetails
+    );
+
     return res.json({
-      data: taskDetails,
+      data: [...taskDetails, ...taskDetailsWithAssigneeArr],
     });
   } catch (error) {
     next(error);
@@ -260,27 +283,188 @@ const deleteTaskById = async (req, res, next) => {
 
 const getAnalyticsDetails = async (req, res, next) => {
   try {
-    let todoTasks = await Task.find({ queue: "todo" });
-    let backlogTasks = await Task.find({ queue: "backlog" });
-    let progressTasks = await Task.find({ queue: "progress" });
-    let completedTasks = await Task.find({ queue: "done" });
-    let lowPriority = await Task.find({ priority: "low" });
-    let moderatePriority = await Task.find({ priority: "moderate" });
-    let highPriority = await Task.find({ priority: "high" });
-    let allTasks = await Task.find({});
-    let nullDueDateTasks = await Task.find({ dueDate: null });
+    const user = req.query.user || "";
+    // console.log(user);
 
-    let dueDateTasks = allTasks?.length - nullDueDateTasks?.length;
+    //todo
+    let todoTasks = await Task.find({ queue: "todo", user: user });
+    let assignedToDoTasks = await Task.find({
+      queue: "todo",
+      assignedTo: user,
+    });
+    assignedToDoTasks = Array.from(assignedToDoTasks);
+    let assignedToDoTasksArr = assignedToDoTasks.filter((item) => {
+      return item?.user !== user;
+    });
+
+    // for (let index in assignedToDoTasks) {
+    //   if (assignedToDoTasks[index]?.user == user) {
+    //     assignedToDoTasks.splice(index, 1);
+    //   }
+    // }
+
+    //backlog
+    let backlogTasks = await Task.find({ queue: "backlog", user: user });
+    let assignedBacklogTasks = await Task.find({
+      queue: "backlog",
+      assignedTo: user,
+    });
+    assignedBacklogTasks = Array.from(assignedBacklogTasks);
+    let assignedBacklogTasksArr = assignedBacklogTasks.filter((item) => {
+      return item?.user !== user;
+    });
+
+    // for (let index in assignedBacklogTasks) {
+    //   if (assignedBacklogTasks[index]?.user == user) {
+    //     assignedBacklogTasks.splice(index, 1);
+    //   }
+    // }
+
+    //progress
+    let progressTasks = await Task.find({ queue: "progress", user: user });
+    let assignedProgressTasks = await Task.find({
+      queue: "progress",
+      assignedTo: user,
+    });
+    assignedProgressTasks = Array.from(assignedProgressTasks);
+    let assignedProgressTasksArr = assignedProgressTasks.filter((item) => {
+      return item?.user !== user;
+    });
+
+    // for (let index in assignedProgressTasks) {
+    //   if (assignedProgressTasks[index]?.user == user) {
+    //     assignedProgressTasks.splice(index, 1);
+    //   }
+    // }
+
+    //completed
+    let completedTasks = await Task.find({ queue: "done", user: user });
+    let assignedCompletedTasks = await Task.find({
+      queue: "done",
+      assignedTo: user,
+    });
+    assignedCompletedTasks = Array.from(assignedCompletedTasks);
+    let assignedCompletedTasksArr = assignedCompletedTasks.filter((item) => {
+      return item?.user !== user;
+    });
+    // for (let index in assignedCompletedTasks) {
+    //   if (assignedCompletedTasks[index]?.user == user) {
+    //     assignedCompletedTasks.splice(index, 1);
+    //   }
+    // }
+
+    //low priority
+    let lowPriority = await Task.find({ priority: "low", user: user });
+    let lowPriorityTasks = await Task.find({
+      priority: "low",
+      assignedTo: user,
+    });
+    lowPriorityTasks = Array.from(lowPriorityTasks);
+    let lowPriorityTasksArr = lowPriorityTasks.filter((item) => {
+      return item?.user !== user;
+    });
+    // for (let index in lowPriorityTasks) {
+    //   if (lowPriorityTasks[index]?.user == user) {
+
+    //     lowPriorityTasks.splice(index, 1);
+    //   }
+    // }
+
+    console.log(
+      "lowPriority",
+      lowPriority,
+      "lowPriorityTasksArr",
+      lowPriorityTasksArr
+    );
+
+    //moderate
+    let moderatePriority = await Task.find({
+      priority: "moderate",
+      user: user,
+    });
+    let moderatePriorityTasks = await Task.find({
+      priority: "moderate",
+      assignedTo: user,
+    });
+    moderatePriorityTasks = Array.from(moderatePriorityTasks);
+    let moderatePriorityTasksArr = moderatePriorityTasks.filter((item) => {
+      return item?.user !== user;
+    });
+    // for (let index in moderatePriorityTasks) {
+    //   if (moderatePriorityTasks[index]?.user == user) {
+    //     moderatePriorityTasks.splice(index, 1);
+    //   }
+    // }
+
+    //high
+    let highPriority = await Task.find({ priority: "high", user: user });
+    let highPriorityTasks = await Task.find({
+      priority: "high",
+      assignedTo: user,
+    });
+    highPriorityTasks = Array.from(highPriorityTasks);
+    let highPriorityTasksArr = highPriorityTasks.filter((item) => {
+      return item?.user !== user;
+    });
+    // for (let index in highPriorityTasks) {
+    //   if (highPriorityTasks[index]?.user == user) {
+    //     highPriorityTasks.splice(index, 1);
+    //   }
+    // }
+
+    let allCreatedTasks = await Task.find({ user: user });
+    let allAssignedTasks = await Task.find({
+      assignedTo: user,
+    });
+    allAssignedTasks = Array.from(allAssignedTasks);
+    let allAssignedTasksArr = allAssignedTasks.filter((item) => {
+      return item?.user !== user;
+    });
+    // for (let index in allAssignedTasks) {
+    //   if (allAssignedTasks[index]?.user == user) {
+    //     allAssignedTasks.splice(index, 1);
+    //   }
+    // }
+
+    let allCreatedNullDateTasks = await Task.find({
+      dueDate: null,
+      user: user,
+    });
+    let allAssignedNullDateTasks = await Task.find({
+      dueDate: null,
+      assignedTo: user,
+    });
+    allAssignedNullDateTasks = Array.from(allAssignedNullDateTasks);
+    let allAssignedNullDateTasksArr = allAssignedNullDateTasks.filter(
+      (item) => {
+        return item?.user !== user;
+      }
+    );
+    // for (let index in allAssignedNullDateTasks) {
+    //   if (allAssignedNullDateTasks[index]?.user == user) {
+    //     allAssignedNullDateTasks.splice(index, 1);
+    //   }
+    // }
+
+    let dueDateTasks =
+      allCreatedTasks?.length +
+      allAssignedTasksArr?.length -
+      (allCreatedNullDateTasks?.length + allAssignedNullDateTasksArr?.length);
+    // let allTasks = await Task.find({ user: user });
+    // let nullDueDateTasks = await Task.find({ dueDate: null, user: user });
+    // let dueDateTasks = allTasks?.length - nullDueDateTasks?.length;
 
     return res.json({
       data: {
-        todoTasks: todoTasks?.length,
-        backlogTasks: backlogTasks?.length,
-        progressTasks: progressTasks?.length,
-        completedTasks: completedTasks?.length,
-        lowPriority: lowPriority?.length,
-        moderatePriority: moderatePriority?.length,
-        highPriority: highPriority?.length,
+        todoTasks: todoTasks?.length + assignedToDoTasksArr?.length,
+        backlogTasks: backlogTasks?.length + assignedBacklogTasksArr?.length,
+        progressTasks: progressTasks?.length + assignedProgressTasksArr?.length,
+        completedTasks:
+          completedTasks?.length + assignedCompletedTasksArr?.length,
+        lowPriority: lowPriority?.length + lowPriorityTasksArr?.length,
+        moderatePriority:
+          moderatePriority?.length + moderatePriorityTasksArr?.length,
+        highPriority: highPriority?.length + highPriorityTasksArr?.length,
         dueDateTasks: dueDateTasks,
       },
     });
