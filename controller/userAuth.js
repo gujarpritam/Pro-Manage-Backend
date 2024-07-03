@@ -5,9 +5,6 @@ const jwt = require("jsonwebtoken");
 const registerUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
-    console.log(name);
-    console.log(email);
-    console.log(password);
 
     if (!name || !email || !password) {
       return res.status(400).json({
@@ -95,7 +92,6 @@ const updateUserName = async (req, res, next) => {
     const email = req.query.email || "";
     const name = req.query.name || "";
 
-    console.log(email, " ", name);
     if (!email || !name) {
       return res.status(400).json({
         message: "Bad Request",
@@ -133,8 +129,6 @@ const updateUserDetails = async (req, res, next) => {
   try {
     const email = req.query.email || "";
     const userData = req.body;
-
-    console.log(email, " ", userData);
 
     if (!email) {
       return res.status(400).json({
@@ -175,12 +169,10 @@ const updateUserDetails = async (req, res, next) => {
     );
 
     if (!passwordMatch) {
-      console.log("password did not match");
       return res
         .status(401)
         .json({ message: "Password did not match", passwordMatch: false });
     } else {
-      console.log("password matched");
       const hashedPassword = await bcrypt.hash(userData?.newPassword, 10);
 
       await ProManageUser.updateOne(
@@ -196,8 +188,6 @@ const updateUserDetails = async (req, res, next) => {
 
       res.json({ message: "User details updated successfully", updated: true });
     }
-
-    // res.json({ message: "Username updated successfully" });
   } catch (error) {
     next(error);
   }

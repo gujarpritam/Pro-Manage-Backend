@@ -15,8 +15,6 @@ const addTask = async (req, res) => {
       user,
     } = req.body;
 
-    console.log(title, priority, assignedTo);
-
     if (!title || !priority || !user) {
       return res.status(400).json({
         message: "Bad Request",
@@ -49,7 +47,6 @@ const getTask = async (req, res, next) => {
     const timeStamp = req.query.timeStamp;
     const createdBy = req.query.user;
 
-    // console.log(category, timeStamp);
     let taskDetails, taskDetailsWithAssignee;
 
     if (timeStamp === "Today") {
@@ -119,24 +116,9 @@ const getTask = async (req, res, next) => {
     taskDetailsWithAssignee = Array.from(taskDetailsWithAssignee);
     taskDetails = Array.from(taskDetails);
 
-    // for (let index = 0; index < taskDetailsWithAssignee?.length; index++) {
     let taskDetailsWithAssigneeArr = taskDetailsWithAssignee.filter((item) => {
       return item?.user !== createdBy;
     });
-    // if (taskDetailsWithAssignee[index].user == createdBy) {
-    //   console.log(taskDetailsWithAssignee[index]);
-    //   taskDetailsWithAssignee.splice(index, 1);
-    // }
-    // }
-
-    console.log(
-      timeStamp,
-      category,
-      "taskDetailsWithAssigneeArr",
-      taskDetailsWithAssigneeArr,
-      "taskDetails",
-      taskDetails
-    );
 
     return res.json({
       data: [...taskDetails, ...taskDetailsWithAssigneeArr],
@@ -284,9 +266,8 @@ const deleteTaskById = async (req, res, next) => {
 const getAnalyticsDetails = async (req, res, next) => {
   try {
     const user = req.query.user || "";
-    // console.log(user);
 
-    //todo
+    //Details of ToDo Tasks
     let todoTasks = await Task.find({ queue: "todo", user: user });
     let assignedToDoTasks = await Task.find({
       queue: "todo",
@@ -297,13 +278,7 @@ const getAnalyticsDetails = async (req, res, next) => {
       return item?.user !== user;
     });
 
-    // for (let index in assignedToDoTasks) {
-    //   if (assignedToDoTasks[index]?.user == user) {
-    //     assignedToDoTasks.splice(index, 1);
-    //   }
-    // }
-
-    //backlog
+    //Details of Backlog Tasks
     let backlogTasks = await Task.find({ queue: "backlog", user: user });
     let assignedBacklogTasks = await Task.find({
       queue: "backlog",
@@ -314,13 +289,7 @@ const getAnalyticsDetails = async (req, res, next) => {
       return item?.user !== user;
     });
 
-    // for (let index in assignedBacklogTasks) {
-    //   if (assignedBacklogTasks[index]?.user == user) {
-    //     assignedBacklogTasks.splice(index, 1);
-    //   }
-    // }
-
-    //progress
+    //Details of Progress Tasks
     let progressTasks = await Task.find({ queue: "progress", user: user });
     let assignedProgressTasks = await Task.find({
       queue: "progress",
@@ -331,13 +300,7 @@ const getAnalyticsDetails = async (req, res, next) => {
       return item?.user !== user;
     });
 
-    // for (let index in assignedProgressTasks) {
-    //   if (assignedProgressTasks[index]?.user == user) {
-    //     assignedProgressTasks.splice(index, 1);
-    //   }
-    // }
-
-    //completed
+    //Details of Done Tasks
     let completedTasks = await Task.find({ queue: "done", user: user });
     let assignedCompletedTasks = await Task.find({
       queue: "done",
@@ -347,11 +310,6 @@ const getAnalyticsDetails = async (req, res, next) => {
     let assignedCompletedTasksArr = assignedCompletedTasks.filter((item) => {
       return item?.user !== user;
     });
-    // for (let index in assignedCompletedTasks) {
-    //   if (assignedCompletedTasks[index]?.user == user) {
-    //     assignedCompletedTasks.splice(index, 1);
-    //   }
-    // }
 
     //low priority
     let lowPriority = await Task.find({ priority: "low", user: user });
@@ -363,19 +321,6 @@ const getAnalyticsDetails = async (req, res, next) => {
     let lowPriorityTasksArr = lowPriorityTasks.filter((item) => {
       return item?.user !== user;
     });
-    // for (let index in lowPriorityTasks) {
-    //   if (lowPriorityTasks[index]?.user == user) {
-
-    //     lowPriorityTasks.splice(index, 1);
-    //   }
-    // }
-
-    console.log(
-      "lowPriority",
-      lowPriority,
-      "lowPriorityTasksArr",
-      lowPriorityTasksArr
-    );
 
     //moderate
     let moderatePriority = await Task.find({
@@ -390,11 +335,6 @@ const getAnalyticsDetails = async (req, res, next) => {
     let moderatePriorityTasksArr = moderatePriorityTasks.filter((item) => {
       return item?.user !== user;
     });
-    // for (let index in moderatePriorityTasks) {
-    //   if (moderatePriorityTasks[index]?.user == user) {
-    //     moderatePriorityTasks.splice(index, 1);
-    //   }
-    // }
 
     //high
     let highPriority = await Task.find({ priority: "high", user: user });
@@ -406,11 +346,6 @@ const getAnalyticsDetails = async (req, res, next) => {
     let highPriorityTasksArr = highPriorityTasks.filter((item) => {
       return item?.user !== user;
     });
-    // for (let index in highPriorityTasks) {
-    //   if (highPriorityTasks[index]?.user == user) {
-    //     highPriorityTasks.splice(index, 1);
-    //   }
-    // }
 
     let allCreatedTasks = await Task.find({ user: user });
     let allAssignedTasks = await Task.find({
@@ -420,11 +355,6 @@ const getAnalyticsDetails = async (req, res, next) => {
     let allAssignedTasksArr = allAssignedTasks.filter((item) => {
       return item?.user !== user;
     });
-    // for (let index in allAssignedTasks) {
-    //   if (allAssignedTasks[index]?.user == user) {
-    //     allAssignedTasks.splice(index, 1);
-    //   }
-    // }
 
     let allCreatedNullDateTasks = await Task.find({
       dueDate: null,
@@ -440,19 +370,11 @@ const getAnalyticsDetails = async (req, res, next) => {
         return item?.user !== user;
       }
     );
-    // for (let index in allAssignedNullDateTasks) {
-    //   if (allAssignedNullDateTasks[index]?.user == user) {
-    //     allAssignedNullDateTasks.splice(index, 1);
-    //   }
-    // }
 
     let dueDateTasks =
       allCreatedTasks?.length +
       allAssignedTasksArr?.length -
       (allCreatedNullDateTasks?.length + allAssignedNullDateTasksArr?.length);
-    // let allTasks = await Task.find({ user: user });
-    // let nullDueDateTasks = await Task.find({ dueDate: null, user: user });
-    // let dueDateTasks = allTasks?.length - nullDueDateTasks?.length;
 
     return res.json({
       data: {
@@ -476,8 +398,6 @@ const getAnalyticsDetails = async (req, res, next) => {
 const addUser = async (req, res, next) => {
   try {
     const email = req.query.email;
-
-    console.log(email);
 
     if (!email) {
       return res.status(400).json({
@@ -509,10 +429,7 @@ const addUser = async (req, res, next) => {
 
 const getAllAssignee = async (req, res, next) => {
   try {
-    // const category = req.query.category;
-
     let assigneeDetails = await Assignee.find({});
-    console.log("assignee", assigneeDetails);
 
     assigneeDetails = Array.from(assigneeDetails);
 
